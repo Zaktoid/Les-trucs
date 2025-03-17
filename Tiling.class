@@ -1,0 +1,75 @@
+// Function to draw an equilateral triangle
+void drawEquilateralTriangle(SDL_Renderer* renderer, int x, int y, int size) {
+    int halfWidth = size / 2;
+
+    SDL_Point points[3] = {
+        { x, y - halfWidth },
+        { x - (size / 2), y + halfWidth },
+        { x + (size / 2), y + halfWidth }
+    };
+
+    SDL_RenderDrawLines(renderer, points, 3);
+}
+
+int main(int argc, char* args[]) {
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        printf("SDL could not initialize! SDL_Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    // Create window
+    SDL_Window* window = SDL_CreateWindow("Tiling with Triangles", SDL_WINDOWPOS_UNDEFINED, SDL_WINDOWPOS_UNDEFINED, SCREEN_WIDTH, SCREEN_HEIGHT, SDL_WINDOW_SHOWN);
+    if (window == NULL) {
+        printf("Window could not be created! SDL_Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    // Create renderer
+    SDL_Renderer* renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    if (renderer == NULL) {
+        printf("Renderer could not be created! SDL_Error: %s\n", SDL_GetError());
+        return -1;
+    }
+
+    // Set render draw color
+    SDL_SetRenderDrawColor(renderer, 255, 255, 255, 255);
+
+    // Clear the screen
+    SDL_RenderClear(renderer);
+
+    // Calculate the number of rows and columns of triangles
+    int numRows = SCREEN_HEIGHT / TRIANGLE_HEIGHT;
+    int numCols = SCREEN_WIDTH / TRIANGLE_WIDTH;
+
+    // Draw the tiling of triangles
+    for (int row = 0; row < numRows; row++) {
+        for (int col = 0; col < numCols; col++) {
+            int x = col * TRIANGLE_WIDTH + (row % 2) * (TRIANGLE_WIDTH / 2);
+            int y = row * TRIANGLE_HEIGHT;
+
+            drawEquilateralTriangle(renderer, x, y, TRIANGLE_HEIGHT);
+        }
+    }
+
+    // Update the screen
+    SDL_RenderPresent(renderer);
+
+    // Main loop
+    SDL_Event e;
+    int quit = 0;
+    while (!quit) {
+        while (SDL_PollEvent(&e) != 0) {
+            if (e.type == SDL_QUIT) {
+                quit = 1;
+            }
+        }
+    }
+
+    // Cleanup and quit SDL
+    SDL_DestroyRenderer(renderer);
+    SDL_DestroyWindow(window);
+    SDL_Quit();
+
+    return 0;
+}

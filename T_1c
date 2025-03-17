@@ -1,0 +1,15 @@
+#include <stdlib.h>
+#include <stdio.h>
+#include <math.h>
+#include "Mathutils.h"
+
+int main()
+{
+    float f=0;
+    int N=10000000;
+    for(int j=0;j<N;j++)
+    {
+        f+sin(pow(2,j))/N;
+    }
+    printf("%f \n",f);
+}

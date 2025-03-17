@@ -1,0 +1,4 @@
+class Segment extends Coordi
+{
+    
+}

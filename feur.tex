@@ -1,0 +1,13 @@
+\documentclass{article}
+\usepackage{tikz-cd}
+\usepackage{amsmath}
+\begin{document}
+\begin{center}
+\begin{tikzcd}[column sep={{{{3em,between origins}}}}]
+
+  A' \arrow{rr}[pos=0.25]{f} \arrow{dd}[swap,pos=0.25]{a} \arrow{rd}[inner sep=1pt]{1_{A'}} && B'' \arrow{dd}[pos=0.25]{\iota_{B''}} \arrow{rd}[inner sep=1pt]{\iota_{B''}}\
+ {} & A' \arrow{ld}[swap,inner sep=1pt]{a} \arrow{rr}[pos=0.25]{\iota_A\circ a} &&{A}\amalg_{A'}{B''} \arrow{dl}[inner sep=1pt]{1_{{A}\amalg_{A'}{B''}}}\
+ A \arrow[swap]{rr}[pos=0.25]{\iota_A} && \smash[b]{{A}\amalg_{A'}{B''}}\
+\end{tikzcd}
+\end{center}
+\end{document}
