@@ -119,7 +119,7 @@ int main()
 		SDL_Exitwitherror("renderer failed");
 	SDL_bool Launched= SDL_TRUE;
     ////////////////////////////////Sims elements/////////////////////////////////////////////
-	int nb=800;
+	int nb=1000;
 	Particle** Things=malloc(nb*sizeof(Particle*));
 	for(int k=0;k<nb;k++)
 	{

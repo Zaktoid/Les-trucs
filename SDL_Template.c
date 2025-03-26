@@ -5,11 +5,17 @@
 #include <time.h>
 #include "Mathutils.h"
 
-
+#define MAX=40000
 void SDL_Exitwitherror(const char *message)
 {
 	SDL_Log("Erreur:%s >%s \n",message,SDL_GetError());
 	exit(EXIT_FAILURE);
+}
+
+int* LookAndSay(int* in,int size)
+{
+	
+
 }
 
 

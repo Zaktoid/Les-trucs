@@ -5,7 +5,7 @@
 #include <math.h>
 #include "Mathutils.h"
 
-quat C={-0.4, 0.6, 0, 0};
+quat START={0, 0, 0, 0};
 
 void SDL_Exitwitherror(const char *message)
 {
@@ -13,22 +13,43 @@ void SDL_Exitwitherror(const char *message)
     exit(EXIT_FAILURE);
 }
 
-float TestDiverg(int tres, quat (*f)(quat), quat a, double toler)
+inline float TestDiverg(int tres, quat a, quat C, double toler)
 {
     quat interation = a;
+    const double toler_squared = toler * toler; // Compare squared modules to avoid sqrt
+    
     for(int k = 0; k < tres; k++)
     {
-        interation = f(interation);
-        if(module_q(interation) > toler)
+        // Perform quaternion operations directly to avoid function call overhead
+        // This assumes you know the implementation of Pow_q and sum_q
+        // Replace with the actual implementation from Mathutils.c
+        
+        // Pow_q(interation, 2) inline expansion:
+        quat squared = {
+            interation.Rq * interation.Rq - interation.Iq * interation.Iq - 
+            interation.Jq * interation.Jq - interation.Kq * interation.Kq,
+            2 * interation.Rq * interation.Iq,
+            2 * interation.Rq * interation.Jq,
+            2 * interation.Rq * interation.Kq
+        };
+        
+        // sum_q inline expansion:
+        interation.Rq = squared.Rq + C.Rq;
+        interation.Iq = squared.Iq + C.Iq;
+        interation.Jq = squared.Jq + C.Jq;
+        interation.Kq = squared.Kq + C.Kq;
+        
+        // Squared module check (faster than sqrt)
+        double mod_squared = interation.Rq * interation.Rq + interation.Iq * interation.Iq + 
+                            interation.Jq * interation.Jq + interation.Kq * interation.Kq;
+        
+        if(mod_squared > toler_squared)
             return k;
     }
     return 0;
 }
 
-quat Mendel(quat in)
-{
-    return sum_q(Pow_q(in, 2), C);
-}
+
 
 int main(int argc, char **argv)
 {
@@ -121,28 +142,28 @@ int main(int argc, char **argv)
                             if (z > 0.2) z -= 0.1; // Prevent divide by zero
                             break;
                         case SDLK_u:
-                            C.Iq += (0.01)/z;
+                            START.Iq += (0.01)/z;
                             break;
                         case SDLK_j:
-                            C.Iq -= (0.01)/z;
+                            START.Iq -= (0.01)/z;
                             break;
                         case SDLK_i:
-                            C.Rq += (0.01)/z;
+                            START.Rq += (0.01)/z;
                             break;
                         case SDLK_k:
-                            C.Rq -= (0.01)/z;
+                            START.Rq -= (0.01)/z;
                             break;
                         case SDLK_o:
-                            C.Jq += (0.01)/z;
+                            START.Jq += (0.01)/z;
                             break;
                         case SDLK_l:
-                            C.Jq -= (0.01)/z;
+                            START.Jq -= (0.01)/z;
                             break;
                         case SDLK_p:
-                            C.Kq += (0.01)/z;
+                            START.Kq += (0.01)/z;
                             break;
                         case SDLK_m:
-                            C.Kq -= (0.01)/z; // Changed to 0.01 to match other increments
+                            START.Kq -= (0.01)/z; // Changed to 0.01 to match other increments
                             break;
                         case SDLK_w:
                             tres += 1;
@@ -159,21 +180,29 @@ int main(int argc, char **argv)
         }
         
         // Calculate Julia set in parallel and store in buffer
-        #pragma omp parallel for collapse(2)
-        for(int k = 0; k < hauteur; k++)
-        {
-            for(int l = 0; l < hauteur; l++)
-            {
-                quat a = {
-                    ((double)k - (hauteur/2) + horiz) / (z * (hauteur/4)),
-                    ((double)l - (hauteur/2) + vert) / (z * (hauteur/4)),
-                    0,
-                    0,
-                };
-                float s = TestDiverg(5 * z * tres, Mendel, a, 5 * z * tres);
-                // Store result in buffer
-                result_buffer[k + l * hauteur] = s;
+        const int CHUNK_SIZE = 32; // Adjust based on your cache size
+
+        #pragma omp parallel for collapse(2) schedule(dynamic)
+        for(int y_chunk = 0; y_chunk < hauteur; y_chunk += CHUNK_SIZE) {
+        for(int x_chunk = 0; x_chunk < hauteur; x_chunk += CHUNK_SIZE) {
+            // Process a chunk
+            int y_max = y_chunk + CHUNK_SIZE > hauteur ? hauteur : y_chunk + CHUNK_SIZE;
+            int x_max = x_chunk + CHUNK_SIZE > hauteur ? hauteur : x_chunk + CHUNK_SIZE;
+            
+            for(int l = y_chunk; l < y_max; l++) {
+                for(int k = x_chunk; k < x_max; k++) {
+                    quat C = {
+                        ((double)k - (hauteur/2) + horiz) / (z * (hauteur/4)),
+                        ((double)l - (hauteur/2) + vert) / (z * (hauteur/4)),
+                        0,
+                        0,
+                    };
+                    float s = TestDiverg(5 * z * tres, START, C, 5 * z * tres);
+                    // Store in row-major order for better cache hits
+                    result_buffer[l * hauteur + k] = s;
+                }
             }
+        }
         }
         
         // Render results sequentially (thread-safe)
