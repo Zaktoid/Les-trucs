@@ -1,0 +1,19 @@
+method: bayes
+metric:
+  name: valid_loss
+  goal: minimize
+parameters:
+  embed_channels:
+    values: [8, 15, 20]
+  hidden_channels:
+    values: [32, 64, 128]
+  num_layers:
+    values: [4, 5, 10, 15]
+  conv:
+    values: ["GCNConv", "GraphConv", "GATConv"]
+  activation:
+    values: ["relu", "leaky_relu", "gelu"]
+  alpha:
+    values: [0.01, 0.1, 0.5, 1.0]
+  dropout_rate:
+    values: [0.0, 0.1, 0.3, 0.5]
